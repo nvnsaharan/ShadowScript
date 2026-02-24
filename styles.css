@@ -65,12 +65,27 @@ body {
   pointer-events: none;
 }
 
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 48px;
+}
+
+.app-logo {
+  width: 54px;
+  height: 54px;
+  display: block;
+}
+
 .app-title {
   font-size: 32px;
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 0;
   letter-spacing: -0.02em;
 }
 .app-title::after {
@@ -201,6 +216,10 @@ textarea:focus {
   cursor: pointer;
   transition: background var(--transition);
   flex-shrink: 0;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
 }
 .toggle.on { background: var(--accent); }
 .toggle::after {
@@ -442,6 +461,12 @@ input[type="range"]::-moz-range-thumb {
 .training-view.burnout .timer-block {
   animation: burnoutBg 0.5s ease infinite;
 }
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .big-timer,
+  .training-view.burnout .timer-block { animation: none; }
+}
 @keyframes burnoutBg {
   0%, 100% { background: transparent; }
   50% { background: rgba(255, 93, 93, 0.06); }
@@ -608,4 +633,16 @@ input[type="range"]::-moz-range-thumb {
     margin-right: auto;
   }
   .big-timer { font-size: 120px; }
+}
+
+/* Mobile: smaller timer, tighter padding */
+@media (max-width: 600px) {
+  .setup-view { padding: 24px 20px 32px; }
+  .brand { margin-bottom: 32px; }
+  .app-title { font-size: 26px; }
+  .big-timer { font-size: 80px; }
+  .training-header { padding: 16px 20px; }
+  .timer-block { padding: 20px; }
+  .combo-track-wrap { padding: 8px 12px; }
+  .modal-overlay { padding: 16px; }
 }

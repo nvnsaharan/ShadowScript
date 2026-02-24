@@ -98,7 +98,7 @@
 
   function saveRoutines() {
     const val = document.getElementById('custom-routine').value.trim();
-    if (val) localStorage.setItem(STORAGE_KEYS.routines, val);
+    localStorage.setItem(STORAGE_KEYS.routines, val);
   }
 
   function setSouthpaw(on) {
@@ -109,9 +109,7 @@
   }
 
   document.getElementById('toggle-southpaw').addEventListener('click', function () {
-    const on = !this.classList.toggle('on');
-    this.classList.toggle('on', !on);
-    setSouthpaw(!on);
+    setSouthpaw(!this.classList.contains('on'));
   });
 
   // ——— Custom routine validation ———
@@ -165,6 +163,7 @@
   }
 
   function getNextCombo(modeKey, customCombos, southpaw) {
+    const mode = modeKey && MODES[modeKey] ? modeKey : 'medium';
     if (customCombos && customCombos.length) {
       const idx = randomInt(0, customCombos.length - 1);
       return customCombos[idx].slice();
@@ -181,7 +180,7 @@
       return lastCombo.slice();
     }
     pivotRepeatCount = 0;
-    const next = generateCombo(modeKey, southpaw);
+    const next = generateCombo(mode, southpaw);
     lastCombo = next;
     return next;
   }
@@ -235,13 +234,9 @@
     utterance.volume = 1;
     utterance.pitch = 1;
 
-    if (personality === 'minimal') {
-      utterance.rate = 0.85;
-    } else if (personality === 'aggressive') {
-      utterance.rate = 1.0;
-    } else {
-      utterance.rate = 0.9;
-    }
+    const baseRate = personality === 'minimal' ? 0.85 : personality === 'aggressive' ? 1.0 : 0.9;
+    const userRate = parseFloat(speechRateSlider?.value, 10) || 1;
+    utterance.rate = baseRate * userRate;
 
     speaking = true;
     utterance.onend = function () { speaking = false; };
@@ -308,17 +303,20 @@
     if (s === 'running' && isBurnoutPhase()) trainingView.classList.add('burnout');
   }
 
-  function getTotalWorkoutSec() {
+  function getMode() {
     const modeKey = document.getElementById('difficulty').value;
-    const m = MODES[modeKey];
+    return MODES[modeKey] || MODES.medium;
+  }
+
+  function getTotalWorkoutSec() {
+    const m = getMode();
     const restSec = (m.resetPause / 1000) * Math.max(0, totalRounds - 1);
     return totalRounds * (WARMUP_SEC + roundDurationSec) + restSec;
   }
 
   function updateProgress() {
     const totalSec = getTotalWorkoutSec();
-    const modeKey = document.getElementById('difficulty').value;
-    const m = MODES[modeKey];
+    const m = getMode();
     const restSec = m.resetPause / 1000;
     let elapsed = (currentRound - 1) * (WARMUP_SEC + roundDurationSec + restSec);
     if (state === 'warmup') elapsed += roundElapsedSec;
@@ -359,8 +357,8 @@
     }
     roundStartTime = Date.now();
     roundElapsedSec = 0;
-    const modeKey = document.getElementById('difficulty').value;
-    const m = MODES[modeKey];
+    const modeKey = document.getElementById('difficulty').value || 'medium';
+    const m = getMode();
     const customText = document.getElementById('custom-routine').value.trim();
     const customCombos = customText ? parseCustomRoutine(customText) : null;
     const southpaw = document.getElementById('toggle-southpaw').classList.contains('on');
@@ -418,12 +416,16 @@
           bigTimer.textContent = formatTime(Math.ceil(restMs / 1000));
           let restLeft = Math.ceil(restMs / 1000);
           restElapsedSec = 0;
-          const restInterval = setInterval(function () {
+          if (restInterval) clearInterval(restInterval);
+          restInterval = setInterval(function () {
             restLeft--;
             restElapsedSec = Math.ceil(restMs / 1000) - restLeft;
             bigTimer.textContent = formatTime(restLeft);
             updateProgress();
-            if (restLeft <= 0) clearInterval(restInterval);
+            if (restLeft <= 0) {
+              clearInterval(restInterval);
+              restInterval = null;
+            }
           }, 1000);
         }
       }
@@ -431,10 +433,15 @@
   }
 
   let comboTimeouts = [];
+  let restInterval = null;
 
   function clearComboTimers() {
     comboTimeouts.forEach(t => clearTimeout(t));
     comboTimeouts = [];
+    if (restInterval) {
+      clearInterval(restInterval);
+      restInterval = null;
+    }
   }
 
   function startRunningPhase(modeKey, m, customCombos, southpaw) {
@@ -524,18 +531,28 @@
     speechRateLabel.textContent = Number(this.value).toFixed(1) + 'x';
   });
 
-  btnRef.addEventListener('click', function () {
+  function openRefModal() {
     refModal.classList.add('active');
     refModal.setAttribute('aria-hidden', 'false');
-  });
-  modalClose.addEventListener('click', function () {
+    document.body.style.overflow = 'hidden';
+    modalClose.focus();
+  }
+
+  function closeRefModal() {
     refModal.classList.remove('active');
     refModal.setAttribute('aria-hidden', 'true');
-  });
+    document.body.style.overflow = '';
+    btnRef.focus();
+  }
+
+  btnRef.addEventListener('click', openRefModal);
+  modalClose.addEventListener('click', closeRefModal);
   refModal.addEventListener('click', function (e) {
-    if (e.target === refModal) {
-      refModal.classList.remove('active');
-      refModal.setAttribute('aria-hidden', 'true');
+    if (e.target === refModal) closeRefModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && refModal.classList.contains('active')) {
+      closeRefModal();
     }
   });
 
