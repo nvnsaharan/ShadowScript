@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShadowScript — Shadow Boxing Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="progress-bar">
+    <div id="progress-fill"></div>
+  </div>
+
+  <div class="app">
+    <div id="setup-view" class="setup-view">
+      <h1 class="app-title">ShadowScript</h1>
+
+      <div class="setup-panels">
+        <div class="panel panel-workout">
+          <h2 class="panel-title">Workout</h2>
+          <div class="panel-row">
+            <div class="field">
+              <label for="rounds">Rounds</label>
+              <input type="number" id="rounds" min="1" max="20" value="3">
+            </div>
+            <div class="field">
+              <label for="round-duration">Round (sec)</label>
+              <input type="number" id="round-duration" min="30" max="600" value="180">
+            </div>
+          </div>
+          <div class="field field-full">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel panel-coach">
+          <h2 class="panel-title">Coach</h2>
+          <div class="toggle-row">
+            <span class="toggle-label">Southpaw (mirror slips/rolls)</span>
+            <div id="toggle-southpaw" class="toggle" aria-pressed="false"></div>
+          </div>
+          <div class="field">
+            <label for="coach-personality">Coach personality</label>
+            <select id="coach-personality">
+              <option value="standard">Standard</option>
+              <option value="minimal">Minimal</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </div>
+          <div class="slider-wrap">
+            <label for="speech-rate">Speech rate</label>
+            <input type="range" id="speech-rate" min="0.8" max="1.5" step="0.1" value="1">
+            <span class="slider-label" id="speech-rate-label">1.0x</span>
+          </div>
+        </div>
+
+        <div class="panel panel-routine">
+          <h2 class="panel-title">Custom Routine</h2>
+          <label for="custom-routine">One combo per line</label>
+          <textarea id="custom-routine" placeholder="1-2-3&#10;2-3-4&#10;1-2-7-2" rows="6"></textarea>
+          <p class="textarea-hint">One combo per line. Digits 0–9 and hyphens only. Empty = random.</p>
+        </div>
+      </div>
+
+      <div class="setup-actions">
+        <button type="button" class="cta-start" id="btn-start">Start workout</button>
+        <button type="button" class="ref-link" id="btn-ref" aria-label="Punch reference">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Punch reference
+        </button>
+      </div>
+    </div>
+
+    <div id="training-view" class="training-view">
+      <header class="training-header">
+        <span class="round-badge" id="round-label">Round 1 / 3</span>
+        <span class="state-badge" id="state-label">Warmup</span>
+      </header>
+      <div class="timer-block">
+        <div class="big-timer" id="big-timer">0:00</div>
+        <div class="combo-track-wrap">
+          <div class="combo-track" id="combo-track"></div>
+        </div>
+      </div>
+      <div class="training-footer">
+        <button type="button" class="btn-end" id="btn-end">End workout</button>
+      </div>
+    </div>
+
+    <div id="finished-view" class="finished-view">
+      <h2 class="finished-title">Workout complete</h2>
+      <p id="finished-message" class="finished-message">Great session.</p>
+      <button type="button" class="cta-start" id="btn-restart">Start again</button>
+    </div>
+  </div>
+
+  <div id="ref-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-content modal-content--ref">
+      <h3 class="modal-title">Punch mapping</h3>
+      <p class="modal-subtitle">Definitions and links to learn more.</p>
+      <div class="ref-list">
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">1</span>
+            <h4 class="ref-item-title">Jab</h4>
+          </header>
+          <p class="ref-item-desc">Lead hand straight punch extending forward from guard, rear hand protecting chin.</p>
+          <a href="https://en.wikipedia.org/wiki/Jab_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">2</span>
+            <h4 class="ref-item-title">Cross</h4>
+          </header>
+          <p class="ref-item-desc">Rear hand straight punch fully extended, rear shoulder rotated forward, lead hand guarding.</p>
+          <a href="https://en.wikipedia.org/wiki/Cross_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">3</span>
+            <h4 class="ref-item-title">Hook</h4>
+          </header>
+          <p class="ref-item-desc">Lead arm bent at 90 degrees, horizontal punch motion, torso rotated.</p>
+          <a href="https://en.wikipedia.org/wiki/Hook_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">4</span>
+            <h4 class="ref-item-title">Rear Hook</h4>
+          </header>
+          <p class="ref-item-desc">Rear arm bent and swinging in a horizontal arc, hips and shoulders rotated strongly.</p>
+          <a href="https://en.wikipedia.org/wiki/Hook_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">5</span>
+            <h4 class="ref-item-title">Lead Uppercut</h4>
+          </header>
+          <p class="ref-item-desc">Lead hand rising upward from guard, bent elbow, targeting chin level.</p>
+          <a href="https://en.wikipedia.org/wiki/Uppercut" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">6</span>
+            <h4 class="ref-item-title">Rear Uppercut</h4>
+          </header>
+          <p class="ref-item-desc">Rear hand rising upward with strong hip rotation, compact upward punch.</p>
+          <a href="https://en.wikipedia.org/wiki/Uppercut" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">7</span>
+            <h4 class="ref-item-title">Slip Left</h4>
+          </header>
+          <p class="ref-item-desc">Head moved slightly to the left outside imaginary punch line, knees slightly bent, hands still in guard.</p>
+          <a href="https://en.wikipedia.org/wiki/Slip_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">8</span>
+            <h4 class="ref-item-title">Slip Right</h4>
+          </header>
+          <p class="ref-item-desc">Head moved slightly to the right outside imaginary punch line, balanced stance maintained.</p>
+          <a href="https://en.wikipedia.org/wiki/Slip_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">9</span>
+            <h4 class="ref-item-title">Roll (Bob and Weave)</h4>
+          </header>
+          <p class="ref-item-desc">Lower body squat with torso dipping forward in a U-shaped motion under imaginary punch, hands protecting head.</p>
+          <a href="https://en.wikipedia.org/wiki/Bob_and_weave" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+        <article class="ref-item">
+          <header class="ref-item-header">
+            <span class="ref-num">0</span>
+            <h4 class="ref-item-title">Reset (Guard Stance)</h4>
+          </header>
+          <p class="ref-item-desc">Neutral boxing stance, both hands up near cheeks, elbows tucked, knees slightly bent.</p>
+          <a href="https://en.wikipedia.org/wiki/Guard_(boxing)" target="_blank" rel="noopener noreferrer" class="ref-item-link">Learn more on Wikipedia</a>
+        </article>
+      </div>
+      <button type="button" class="modal-close" id="modal-close">Close</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,544 @@
+/**
+ * ShadowScript — Shadow Boxing Trainer
+ * Coach brain, speech, state machine, persistence.
+ */
+(function () {
+  'use strict';
+
+  // ——— Constants: DSL & mode params ———
+  const PUNCH_NAMES = {
+    1: 'Jab', 2: 'Cross', 3: 'Hook', 4: 'Rear Hook',
+    5: 'Lead Uppercut', 6: 'Rear Uppercut',
+    7: 'Slip Left', 8: 'Slip Right', 9: 'Roll', 0: 'Reset'
+  };
+  const PUNCH_SHORT = {
+    5: 'Upper', 6: 'Upper'
+  };
+  const MODES = {
+    easy:   { comboMin: 2, comboMax: 3, intraPause: 1000, resetPause: 4000, defenseChance: 0.10 },
+    medium: { comboMin: 3, comboMax: 5, intraPause: 1000,  resetPause: 2500, defenseChance: 0.30 },
+    hard:   { comboMin: 5, comboMax: 8, intraPause: 1000,  resetPause: 1500, defenseChance: 0.50 }
+  };
+  const WARMUP_SEC = 10;
+  const BURNOUT_SEC = 15;
+  const BURNOUT_COMBO = [1, 2, 1, 2];
+
+  // ——— State ———
+  let state = 'idle'; // idle | warmup | running | rest | finished
+  let currentRound = 0;
+  let totalRounds = 3;
+  let roundDurationSec = 180;
+  let roundStartTime = 0;
+  let roundElapsedSec = 0;
+  let timerInterval = null;
+  let comboQueue = [];
+  let comboIndex = 0;
+  let lastCombo = null;
+  let pivotRepeatCount = 0;
+  let wakeLock = null;
+  let restElapsedSec = 0;
+
+  // ——— DOM ———
+  const progressBar = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  const setupView = document.getElementById('setup-view');
+  const trainingView = document.getElementById('training-view');
+  const finishedView = document.getElementById('finished-view');
+  const bigTimer = document.getElementById('big-timer');
+  const roundLabel = document.getElementById('round-label');
+  const stateLabel = document.getElementById('state-label');
+  const comboTrack = document.getElementById('combo-track');
+  const btnStart = document.getElementById('btn-start');
+  const btnEnd = document.getElementById('btn-end');
+  const btnRestart = document.getElementById('btn-restart');
+  const btnRef = document.getElementById('btn-ref');
+  const refModal = document.getElementById('ref-modal');
+  const modalClose = document.getElementById('modal-close');
+  const speechRateSlider = document.getElementById('speech-rate');
+  const speechRateLabel = document.getElementById('speech-rate-label');
+
+  // ——— Persistence ———
+  const STORAGE_KEYS = { routines: 'shadowscript_routines', settings: 'shadowscript_settings' };
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.settings);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.rounds != null) document.getElementById('rounds').value = s.rounds;
+      if (s.roundDuration != null) document.getElementById('round-duration').value = s.roundDuration;
+      if (s.difficulty) document.getElementById('difficulty').value = s.difficulty;
+      if (s.southpaw != null) setSouthpaw(!!s.southpaw);
+      if (s.coachPersonality) document.getElementById('coach-personality').value = s.coachPersonality;
+      if (s.speechRate != null) {
+        speechRateSlider.value = s.speechRate;
+        speechRateLabel.textContent = Number(s.speechRate).toFixed(1) + 'x';
+      }
+    } catch (_) {}
+  }
+
+  function saveSettings() {
+    const southpawEl = document.getElementById('toggle-southpaw');
+    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({
+      rounds: parseInt(document.getElementById('rounds').value, 10) || 3,
+      roundDuration: parseInt(document.getElementById('round-duration').value, 10) || 180,
+      difficulty: document.getElementById('difficulty').value || 'medium',
+      southpaw: southpawEl && southpawEl.classList.contains('on'),
+      coachPersonality: document.getElementById('coach-personality').value || 'standard',
+      speechRate: parseFloat(speechRateSlider.value) || 1
+    }));
+  }
+
+  function loadRoutines() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.routines);
+      if (raw) document.getElementById('custom-routine').value = raw;
+    } catch (_) {}
+  }
+
+  function saveRoutines() {
+    const val = document.getElementById('custom-routine').value.trim();
+    if (val) localStorage.setItem(STORAGE_KEYS.routines, val);
+  }
+
+  function setSouthpaw(on) {
+    const t = document.getElementById('toggle-southpaw');
+    if (!t) return;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+
+  document.getElementById('toggle-southpaw').addEventListener('click', function () {
+    const on = !this.classList.toggle('on');
+    this.classList.toggle('on', !on);
+    setSouthpaw(!on);
+  });
+
+  // ——— Custom routine validation ———
+  function parseCustomRoutine(text) {
+    const lines = text.split(/\n/).map(s => s.trim()).filter(Boolean);
+    const combos = [];
+    const re = /^[0-9\-]+$/;
+    for (const line of lines) {
+      if (!re.test(line)) continue;
+      const moves = line.split('-').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n) && n >= 0 && n <= 9);
+      if (moves.length) combos.push(moves);
+    }
+    return combos;
+  }
+
+  // ——— Coach Brain: weighted combo generation ———
+  const OFFENSE = [1, 2, 3, 4, 5, 6];
+  const DEFENSE = [7, 8, 9];
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function pickDefense(southpaw) {
+    const i = randomInt(0, DEFENSE.length - 1);
+    let d = DEFENSE[i];
+    if (southpaw) {
+      if (d === 7) d = 8;
+      else if (d === 8) d = 7;
+    }
+    return d;
+  }
+
+  function generateCombo(modeKey, southpaw) {
+    const m = MODES[modeKey];
+    const len = randomInt(m.comboMin, m.comboMax);
+    const useDefense = Math.random() < m.defenseChance;
+    const out = [];
+    for (let i = 0; i < len; i++) {
+      if (useDefense && i > 0 && Math.random() < 0.4) {
+        out.push(pickDefense(southpaw));
+      } else {
+        out.push(OFFENSE[randomInt(0, OFFENSE.length - 1)]);
+      }
+    }
+    return out;
+  }
+
+  function shouldPivot() {
+    return lastCombo && Math.random() < 0.35 && pivotRepeatCount >= 1;
+  }
+
+  function getNextCombo(modeKey, customCombos, southpaw) {
+    if (customCombos && customCombos.length) {
+      const idx = randomInt(0, customCombos.length - 1);
+      return customCombos[idx].slice();
+    }
+    if (shouldPivot() && lastCombo) {
+      const variation = lastCombo.slice();
+      const insertDef = DEFENSE[randomInt(0, DEFENSE.length - 1)];
+      const pos = Math.min(randomInt(1, variation.length), variation.length - 1);
+      variation.splice(pos, 0, southpaw ? (insertDef === 7 ? 8 : insertDef === 8 ? 7 : 9) : insertDef);
+      return variation;
+    }
+    if (lastCombo && pivotRepeatCount < 1 && Math.random() < 0.4) {
+      pivotRepeatCount++;
+      return lastCombo.slice();
+    }
+    pivotRepeatCount = 0;
+    const next = generateCombo(modeKey, southpaw);
+    lastCombo = next;
+    return next;
+  }
+
+  // ——— Speech ———
+  let selectedVoice = null;
+  let speaking = false;
+
+  function loadVoices() {
+    if (!window.speechSynthesis) return;
+    const voices = speechSynthesis.getVoices();
+    selectedVoice =
+      voices.find(function (v) { return v.name.indexOf('Google') !== -1 && v.lang === 'en-US'; }) ||
+      voices.find(function (v) { return v.lang === 'en-US'; }) ||
+      voices[0];
+  }
+  if (window.speechSynthesis) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+  }
+
+  function formatComboForSpeech(combo, personality) {
+    const mapping = {
+      0: 'Reset',
+      1: 'Jab',
+      2: 'Cross',
+      3: 'Hook',
+      4: 'Rear Hook',
+      5: 'Uppercut',
+      6: 'Rear Uppercut',
+      7: 'Slip Left',
+      8: 'Slip Right',
+      9: 'Roll'
+    };
+    const parts = combo.split('-').map(function (n) { return mapping[n] || ''; }).filter(Boolean);
+    if (personality === 'aggressive') {
+      return parts.join('! ') + '!';
+    }
+    return parts.join(', ');
+  }
+
+  function speakCombo(comboText, raw) {
+    if (!window.speechSynthesis || !comboText) return;
+    speechSynthesis.cancel();
+
+    const personality = document.getElementById('coach-personality').value;
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.text = raw ? comboText : formatComboForSpeech(comboText, personality);
+    utterance.voice = selectedVoice;
+    utterance.lang = 'en-US';
+    utterance.volume = 1;
+    utterance.pitch = 1;
+
+    if (personality === 'minimal') {
+      utterance.rate = 0.85;
+    } else if (personality === 'aggressive') {
+      utterance.rate = 1.0;
+    } else {
+      utterance.rate = 0.9;
+    }
+
+    speaking = true;
+    utterance.onend = function () { speaking = false; };
+    utterance.onerror = function () { speaking = false; };
+    speechSynthesis.speak(utterance);
+  }
+
+  function speakRoundIntro(round, total) {
+    speakCombo('Round ' + round + ' of ' + total + '. Begin.', true);
+  }
+
+  function comboToNames(combo, shortForm) {
+    const southpaw = document.getElementById('toggle-southpaw').classList.contains('on');
+    return combo.map(function (n) {
+      let name = PUNCH_NAMES[n];
+      if (southpaw && (n === 7 || n === 8)) name = n === 7 ? 'Slip Right' : 'Slip Left';
+      if (shortForm && PUNCH_SHORT[n]) name = PUNCH_SHORT[n];
+      return name;
+    }).join(', ');
+  }
+
+  // ——— Wake Lock ———
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (_) {}
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) {
+      try { wakeLock.release(); } catch (_) {}
+      wakeLock = null;
+    }
+  }
+
+  // ——— Haptics ———
+  function vibrate(pattern) {
+    if (window.navigator.vibrate) window.navigator.vibrate(pattern);
+  }
+
+  // ——— UI helpers ———
+  function showView(name) {
+    setupView.style.display = name === 'setup' ? 'block' : 'none';
+    trainingView.classList.remove('active');
+    finishedView.classList.remove('active');
+    if (name === 'training') {
+      trainingView.classList.add('active');
+      progressBar.classList.add('active');
+    } else {
+      progressBar.classList.remove('active');
+    }
+    if (name === 'finished') {
+      finishedView.classList.add('active');
+    }
+  }
+
+  function setState(s) {
+    state = s;
+    stateLabel.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    trainingView.classList.remove('rest', 'burnout');
+    if (s === 'rest') trainingView.classList.add('rest');
+    if (s === 'running' && isBurnoutPhase()) trainingView.classList.add('burnout');
+  }
+
+  function getTotalWorkoutSec() {
+    const modeKey = document.getElementById('difficulty').value;
+    const m = MODES[modeKey];
+    const restSec = (m.resetPause / 1000) * Math.max(0, totalRounds - 1);
+    return totalRounds * (WARMUP_SEC + roundDurationSec) + restSec;
+  }
+
+  function updateProgress() {
+    const totalSec = getTotalWorkoutSec();
+    const modeKey = document.getElementById('difficulty').value;
+    const m = MODES[modeKey];
+    const restSec = m.resetPause / 1000;
+    let elapsed = (currentRound - 1) * (WARMUP_SEC + roundDurationSec + restSec);
+    if (state === 'warmup') elapsed += roundElapsedSec;
+    else if (state === 'running') elapsed += WARMUP_SEC + roundElapsedSec;
+    else if (state === 'rest') elapsed += WARMUP_SEC + roundDurationSec + restElapsedSec;
+    const p = totalSec > 0 ? Math.min(100, (elapsed / totalSec) * 100) : 0;
+    progressFill.style.width = p + '%';
+  }
+
+  function renderComboTrack(highlightIndex) {
+    const southpaw = document.getElementById('toggle-southpaw').classList.contains('on');
+    comboTrack.innerHTML = '';
+    comboQueue.forEach((move, i) => {
+      let label = PUNCH_NAMES[move];
+      if (southpaw && (move === 7 || move === 8)) label = move === 7 ? 'Slip R' : 'Slip L';
+      const chip = document.createElement('span');
+      chip.className = 'combo-chip' + (i === highlightIndex ? ' current' : '');
+      chip.textContent = label;
+      comboTrack.appendChild(chip);
+    });
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function isBurnoutPhase() {
+    return currentRound === totalRounds && roundElapsedSec >= roundDurationSec - BURNOUT_SEC && state === 'running';
+  }
+
+  // ——— Timer & round flow ———
+  function startRound() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    roundStartTime = Date.now();
+    roundElapsedSec = 0;
+    const modeKey = document.getElementById('difficulty').value;
+    const m = MODES[modeKey];
+    const customText = document.getElementById('custom-routine').value.trim();
+    const customCombos = customText ? parseCustomRoutine(customText) : null;
+    const southpaw = document.getElementById('toggle-southpaw').classList.contains('on');
+
+    setState('warmup');
+    bigTimer.textContent = formatTime(WARMUP_SEC);
+    comboQueue = [];
+    comboIndex = 0;
+    renderComboTrack(-1);
+
+    timerInterval = setInterval(function () {
+      const elapsed = (Date.now() - roundStartTime) / 1000;
+      roundElapsedSec = Math.floor(elapsed);
+
+      if (state === 'warmup') {
+        const left = WARMUP_SEC - roundElapsedSec;
+        bigTimer.textContent = formatTime(Math.max(0, left));
+        updateProgress();
+        if (left <= 0) {
+          setState('running');
+          vibrate([100, 50, 100]);
+          startRunningPhase(modeKey, m, customCombos, southpaw);
+        }
+        return;
+      }
+
+      if (state === 'running') {
+        const roundSec = roundDurationSec;
+        const left = roundSec - roundElapsedSec;
+        bigTimer.textContent = formatTime(Math.max(0, left));
+        updateProgress();
+
+        if (isBurnoutPhase()) {
+          if (!trainingView.classList.contains('burnout')) trainingView.classList.add('burnout');
+        }
+
+        if (left <= 0) {
+          clearComboTimers();
+          setState('rest');
+          vibrate([200, 100, 200]);
+          if (currentRound >= totalRounds) {
+            setState('finished');
+            showView('finished');
+            document.getElementById('finished-message').textContent = 'All rounds done. Great work.';
+            releaseWakeLock();
+            progressFill.style.width = '100%';
+            return;
+          }
+          const restMs = m.resetPause;
+          setTimeout(function () {
+            currentRound++;
+            roundLabel.textContent = 'Round ' + (currentRound) + ' / ' + totalRounds;
+            startRound();
+          }, restMs);
+          bigTimer.textContent = formatTime(Math.ceil(restMs / 1000));
+          let restLeft = Math.ceil(restMs / 1000);
+          restElapsedSec = 0;
+          const restInterval = setInterval(function () {
+            restLeft--;
+            restElapsedSec = Math.ceil(restMs / 1000) - restLeft;
+            bigTimer.textContent = formatTime(restLeft);
+            updateProgress();
+            if (restLeft <= 0) clearInterval(restInterval);
+          }, 1000);
+        }
+      }
+    }, 200);
+  }
+
+  let comboTimeouts = [];
+
+  function clearComboTimers() {
+    comboTimeouts.forEach(t => clearTimeout(t));
+    comboTimeouts = [];
+  }
+
+  function startRunningPhase(modeKey, m, customCombos, southpaw) {
+    speakRoundIntro(currentRound, totalRounds);
+
+    function scheduleNext() {
+      if (state !== 'running') return;
+      const isBurnout = isBurnoutPhase();
+      let nextCombo;
+      if (isBurnout) {
+        nextCombo = BURNOUT_COMBO.slice();
+      } else {
+        nextCombo = getNextCombo(modeKey, customCombos, southpaw);
+      }
+      comboQueue = nextCombo;
+      comboIndex = 0;
+      renderComboTrack(0);
+
+      const comboForSpeech = comboQueue.map(function (n) {
+        if (southpaw && n === 7) return 8;
+        if (southpaw && n === 8) return 7;
+        return n;
+      }).join('-');
+      speakCombo(comboForSpeech);
+
+      const intraPause = isBurnout ? 250 : m.intraPause;
+      comboQueue.forEach(function (_, i) {
+        const t = setTimeout(function () {
+          if (state !== 'running') return;
+          comboIndex = i + 1;
+          renderComboTrack(comboIndex);
+        }, (i + 1) * intraPause);
+        comboTimeouts.push(t);
+      });
+
+      const totalComboTime = comboQueue.length * intraPause;
+      const resetPause = isBurnout ? 200 : Math.max(m.resetPause, 3000);
+      const t = setTimeout(function () {
+        if (state !== 'running') return;
+        scheduleNext();
+      }, totalComboTime + resetPause);
+      comboTimeouts.push(t);
+    }
+
+    setTimeout(scheduleNext, 2000);
+  }
+
+  function stopWorkout() {
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    clearInterval(timerInterval);
+    timerInterval = null;
+    clearComboTimers();
+    setState('idle');
+    releaseWakeLock();
+    showView('setup');
+    progressBar.classList.remove('active');
+    progressFill.style.width = '0%';
+  }
+
+  // ——— Event bindings ———
+  btnStart.addEventListener('click', function () {
+    totalRounds = parseInt(document.getElementById('rounds').value, 10) || 3;
+    roundDurationSec = parseInt(document.getElementById('round-duration').value, 10) || 180;
+    currentRound = 1;
+    lastCombo = null;
+    pivotRepeatCount = 0;
+    roundLabel.textContent = 'Round 1 / ' + totalRounds;
+    saveSettings();
+    saveRoutines();
+    requestWakeLock();
+    setupView.classList.add('fade-out');
+    setTimeout(function () {
+      showView('training');
+      setupView.classList.remove('fade-out');
+      progressFill.style.width = '0%';
+      startRound();
+    }, 300);
+  });
+
+  btnEnd.addEventListener('click', stopWorkout);
+  btnRestart.addEventListener('click', function () {
+    finishedView.classList.remove('active');
+    showView('setup');
+  });
+
+  speechRateSlider.addEventListener('input', function () {
+    speechRateLabel.textContent = Number(this.value).toFixed(1) + 'x';
+  });
+
+  btnRef.addEventListener('click', function () {
+    refModal.classList.add('active');
+    refModal.setAttribute('aria-hidden', 'false');
+  });
+  modalClose.addEventListener('click', function () {
+    refModal.classList.remove('active');
+    refModal.setAttribute('aria-hidden', 'true');
+  });
+  refModal.addEventListener('click', function (e) {
+    if (e.target === refModal) {
+      refModal.classList.remove('active');
+      refModal.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  loadSettings();
+  loadRoutines();
+})();
