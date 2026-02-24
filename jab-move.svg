@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="502" viewBox="0 0 384 502">
+<defs>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&amp;display=swap');
+    .b  { stroke:#E11D48; stroke-width:3;   stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .bf { stroke:#E11D48; stroke-width:3;   stroke-linecap:round; stroke-linejoin:round; fill:#E11D48; fill-opacity:0.07; }
+    .gv { stroke:#E11D48; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; fill:#E11D48; fill-opacity:0.22; }
+    .sk { stroke:#E11D48; stroke-width:2;   stroke-linecap:round; fill:none; opacity:0.5; }
+    .dv { stroke:#E11D48; stroke-width:0.8; opacity:0.13; }
+    .br { stroke:#E11D48; stroke-width:1.8; fill:none; opacity:0.22; }
+    .jt { stroke:#E11D48; stroke-width:2;   fill:#E11D48; fill-opacity:0.35; }
+    .lb { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:19px; font-weight:800; letter-spacing:5px; text-anchor:middle; }
+    .ls { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:11px; font-weight:400; letter-spacing:2.5px; text-anchor:middle; opacity:0.55; }
+    .ln { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:12px; font-weight:700; letter-spacing:1px; text-anchor:middle; opacity:0.35; }
+  </style>
+  <radialGradient id="fglow" cx="50%" cy="42%" r="42%">
+    <stop offset="0%"   stop-color="#E11D48" stop-opacity="0.055"/>
+    <stop offset="100%" stop-color="#E11D48" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<rect width="384" height="502" fill="#0C0C0E"/>
+
+<!-- cell glow -->
+<ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+<!-- corner brackets -->
+<path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+<path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+<text x="192" y="44" class="ln">01</text>
+
+<!-- HEAD -->
+<circle cx="195" cy="88" r="26" class="bf"/>
+<path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+<!-- NECK -->
+<line x1="195" y1="114" x2="190" y2="123" class="b"/>
+<!-- TORSO (slight forward lean for jab) -->
+<path d="M 160,123 L 224,121 L 220,222 L 157,225 Z" class="bf"/>
+<line x1="159" y1="196" x2="221" y2="194" class="b" stroke-width="1.5" opacity="0.4"/>
+
+<!-- REAR ARM — guard position -->
+<path d="M 160,130 L 163,174 L 184,130" class="b"/>
+<ellipse cx="184" cy="122" rx="11" ry="9" class="gv"/>
+<circle cx="163" cy="174" r="3.5" class="jt"/>
+
+<!-- LEAD ARM — JAB fully extended -->
+<path d="M 224,126 L 270,121 L 336,118" class="b" stroke-width="3.5"/>
+<ellipse cx="348" cy="116" rx="14" ry="11" class="gv"/>
+<line x1="333" y1="109" x2="305" y2="109" class="sk"/>
+<line x1="333" y1="115" x2="298" y2="115" class="sk"/>
+<line x1="333" y1="121" x2="303" y2="121" class="sk"/>
+<circle cx="224" cy="126" r="4" class="jt"/>
+
+<!-- REAR LEG -->
+<path d="M 161,225 L 146,297 L 140,368" class="b" stroke-width="3.5"/>
+<line x1="140" y1="368" x2="160" y2="377" class="b" stroke-width="3"/>
+<circle cx="146" cy="297" r="3.5" class="jt"/>
+<!-- LEAD LEG -->
+<path d="M 218,222 L 232,293 L 238,368" class="b" stroke-width="3.5"/>
+<line x1="238" y1="368" x2="282" y2="377" class="b" stroke-width="3"/>
+<circle cx="232" cy="293" r="3.5" class="jt"/>
+
+<!-- LABEL -->
+<line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+<text x="192" y="440" class="lb">JAB</text>
+<text x="192" y="458" class="ls">LEAD STRAIGHT PUNCH</text>
+</svg>

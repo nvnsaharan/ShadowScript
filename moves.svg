@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&amp;display=swap');
+    .b  { stroke:#E11D48; stroke-width:3;   stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .bf { stroke:#E11D48; stroke-width:3;   stroke-linecap:round; stroke-linejoin:round; fill:#E11D48; fill-opacity:0.07; }
+    .gv { stroke:#E11D48; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; fill:#E11D48; fill-opacity:0.22; }
+    .sk { stroke:#E11D48; stroke-width:2;   stroke-linecap:round; fill:none; opacity:0.5; }
+    .ac { stroke:#E11D48; stroke-width:2;   stroke-linecap:round; stroke-dasharray:7 4; fill:none; opacity:0.6; }
+    .pl { stroke:#E11D48; stroke-width:1.8; stroke-linecap:round; stroke-dasharray:10 6; opacity:0.35; }
+    .dv { stroke:#E11D48; stroke-width:0.8; opacity:0.13; }
+    .br { stroke:#E11D48; stroke-width:1.8; fill:none; opacity:0.22; }
+    .jt { stroke:#E11D48; stroke-width:2;   fill:#E11D48; fill-opacity:0.35; }
+    .lb { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:19px; font-weight:800; letter-spacing:5px; text-anchor:middle; }
+    .ls { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:11px; font-weight:400; letter-spacing:2.5px; text-anchor:middle; opacity:0.55; }
+    .ln { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:12px; font-weight:700; letter-spacing:1px; text-anchor:middle; opacity:0.35; }
+    .tt { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:15px; font-weight:700; letter-spacing:10px; text-anchor:middle; opacity:0.85; }
+    .ts { font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif; fill:#E11D48; font-size:11px; font-weight:400; letter-spacing:5px; text-anchor:middle; opacity:0.4; }
+  </style>
+
+  <!-- Arrowhead pointing LEFT (for punch lines) -->
+  <marker id="arrL" markerWidth="9" markerHeight="7" refX="1" refY="3.5" orient="auto">
+    <path d="M 9,0 L 0,3.5 L 9,7 Z" fill="#E11D48" opacity="0.5"/>
+  </marker>
+  <!-- Arrowhead pointing UP (for uppercut motion) -->
+  <marker id="arrU" markerWidth="7" markerHeight="9" refX="3.5" refY="1" orient="auto">
+    <path d="M 0,9 L 3.5,0 L 7,9 Z" fill="#E11D48" opacity="0.5"/>
+  </marker>
+
+  <!-- Subtle radial glow per figure -->
+  <radialGradient id="fglow" cx="50%" cy="42%" r="42%">
+    <stop offset="0%"   stop-color="#E11D48" stop-opacity="0.055"/>
+    <stop offset="100%" stop-color="#E11D48" stop-opacity="0"/>
+  </radialGradient>
+
+  <!-- Noise/grain texture overlay -->
+  <filter id="grain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix type="saturate" values="0" result="gray"/>
+    <feBlend in="SourceGraphic" in2="gray" mode="multiply" result="blend"/>
+    <feComponentTransfer>
+      <feFuncA type="linear" slope="0.03"/>
+    </feComponentTransfer>
+    <feComposite in="SourceGraphic" operator="over"/>
+  </filter>
+</defs>
+
+<!-- ===== BACKGROUND ===== -->
+<rect width="1920" height="1080" fill="#0C0C0E"/>
+<!-- Very subtle background texture dots -->
+<rect width="1920" height="1080" fill="none" filter="url(#grain)" opacity="0.5"/>
+
+<!-- ===== GRID STRUCTURE ===== -->
+<!-- Horizontal dividers -->
+<line x1="0" y1="57" x2="1920" y2="57" class="dv"/>
+<line x1="0" y1="559" x2="1920" y2="559" class="dv"/>
+<line x1="0" y1="1077" x2="1920" y2="1077" class="dv"/>
+<!-- Vertical dividers -->
+<line x1="384"  y1="57" x2="384"  y2="1077" class="dv"/>
+<line x1="768"  y1="57" x2="768"  y2="1077" class="dv"/>
+<line x1="1152" y1="57" x2="1152" y2="1077" class="dv"/>
+<line x1="1536" y1="57" x2="1536" y2="1077" class="dv"/>
+
+<!-- ===== TITLE AREA ===== -->
+<text x="960" y="34" class="tt">BOXING MOVE REFERENCE</text>
+<text x="960" y="50" class="ts">FIGHT LAB ATHLETICS · STRIKE SERIES</text>
+
+<!-- Row category labels -->
+<text x="16" y="82" class="ts" text-anchor="start" opacity="0.3" letter-spacing="3px" font-size="10">STRIKES</text>
+<text x="16" y="582" class="ts" text-anchor="start" opacity="0.3" letter-spacing="3px" font-size="10">COMBINATIONS &amp; DEFENSE</text>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 01 ── JAB  (col 0, row 0 → transform translate(0, 57))        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(0,57)">
+  <!-- cell glow -->
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <!-- corner brackets -->
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <!-- number -->
+  <text x="192" y="44" class="ln">01</text>
+
+  <!-- HEAD -->
+  <circle cx="195" cy="88" r="26" class="bf"/>
+  <!-- ear -->
+  <path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+  <!-- NECK -->
+  <line x1="195" y1="114" x2="190" y2="123" class="b"/>
+  <!-- TORSO (slight forward lean for jab) -->
+  <path d="M 160,123 L 224,121 L 220,222 L 157,225 Z" class="bf"/>
+  <!-- Shorts belt line -->
+  <line x1="159" y1="196" x2="221" y2="194" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — guard position -->
+  <path d="M 160,130 L 163,174 L 184,130" class="b"/>
+  <ellipse cx="184" cy="122" rx="11" ry="9" class="gv"/>
+  <!-- joint dots -->
+  <circle cx="163" cy="174" r="3.5" class="jt"/>
+
+  <!-- LEAD ARM — JAB fully extended -->
+  <path d="M 224,126 L 270,121 L 336,118" class="b" stroke-width="3.5"/>
+  <ellipse cx="348" cy="116" rx="14" ry="11" class="gv"/>
+  <!-- motion streaks behind fist -->
+  <line x1="333" y1="109" x2="305" y2="109" class="sk"/>
+  <line x1="333" y1="115" x2="298" y2="115" class="sk"/>
+  <line x1="333" y1="121" x2="303" y2="121" class="sk"/>
+  <!-- shoulder joint -->
+  <circle cx="224" cy="126" r="4" class="jt"/>
+
+  <!-- REAR LEG -->
+  <path d="M 161,225 L 146,297 L 140,368" class="b" stroke-width="3.5"/>
+  <line x1="140" y1="368" x2="160" y2="377" class="b" stroke-width="3"/>
+  <circle cx="146" cy="297" r="3.5" class="jt"/>
+  <!-- LEAD LEG -->
+  <path d="M 218,222 L 232,293 L 238,368" class="b" stroke-width="3.5"/>
+  <line x1="238" y1="368" x2="282" y2="377" class="b" stroke-width="3"/>
+  <circle cx="232" cy="293" r="3.5" class="jt"/>
+
+  <!-- LABEL -->
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">JAB</text>
+  <text x="192" y="458" class="ls">LEAD STRAIGHT PUNCH</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 02 ── CROSS  (col 1, row 0)                                    -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(384,57)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">02</text>
+
+  <!-- HEAD — slight chin-rotation suggesting body turn -->
+  <circle cx="192" cy="88" r="26" class="bf"/>
+  <path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+  <line x1="192" y1="114" x2="186" y2="123" class="b"/>
+  <!-- TORSO — rear shoulder rotated forward -->
+  <path d="M 162,119 L 226,114 L 222,220 L 160,224 Z" class="bf"/>
+  <line x1="162" y1="196" x2="223" y2="192" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- LEAD ARM — guard, pulled back behind chin -->
+  <path d="M 226,120 L 232,170 L 210,126" class="b"/>
+  <ellipse cx="207" cy="118" rx="11" ry="9" class="gv"/>
+  <circle cx="232" cy="170" r="3.5" class="jt"/>
+
+  <!-- REAR ARM — CROSS fully extended -->
+  <path d="M 162,122 L 220,118 L 336,115" class="b" stroke-width="3.5"/>
+  <ellipse cx="348" cy="113" rx="14" ry="11" class="gv"/>
+  <line x1="333" y1="106" x2="305" y2="106" class="sk"/>
+  <line x1="333" y1="112" x2="298" y2="112" class="sk"/>
+  <line x1="333" y1="118" x2="303" y2="118" class="sk"/>
+  <circle cx="162" cy="122" r="4" class="jt"/>
+
+  <!-- LEGS -->
+  <path d="M 163,224 L 148,296 L 142,368" class="b" stroke-width="3.5"/>
+  <line x1="142" y1="368" x2="162" y2="377" class="b" stroke-width="3"/>
+  <circle cx="148" cy="296" r="3.5" class="jt"/>
+  <path d="M 220,220 L 234,292 L 240,368" class="b" stroke-width="3.5"/>
+  <line x1="240" y1="368" x2="284" y2="377" class="b" stroke-width="3"/>
+  <circle cx="234" cy="292" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">CROSS</text>
+  <text x="192" y="458" class="ls">REAR STRAIGHT PUNCH</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 03 ── HOOK  (col 2, row 0)                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(768,57)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">03</text>
+
+  <circle cx="192" cy="88" r="26" class="bf"/>
+  <path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+  <line x1="192" y1="114" x2="186" y2="123" class="b"/>
+  <!-- TORSO — rotating into hook, torso turned -->
+  <path d="M 157,123 L 222,119 L 219,224 L 155,227 Z" class="bf"/>
+  <line x1="157" y1="198" x2="220" y2="195" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — guard -->
+  <path d="M 157,129 L 160,173 L 181,129" class="b"/>
+  <ellipse cx="182" cy="121" rx="11" ry="9" class="gv"/>
+  <circle cx="160" cy="173" r="3.5" class="jt"/>
+
+  <!-- LEAD ARM — HOOK: upper arm extends forward, forearm at 90° -->
+  <path d="M 222,122 L 268,122" class="b" stroke-width="3.5"/>
+  <path d="M 268,122 L 264,164" class="b" stroke-width="3.5"/>
+  <ellipse cx="261" cy="172" rx="13" ry="10" class="gv"/>
+  <circle cx="268" cy="122" r="4" class="jt"/>
+  <circle cx="222" cy="122" r="4" class="jt"/>
+  <!-- arc motion indicator -->
+  <path d="M 240,98 Q 286,114 278,164" class="ac"/>
+
+  <!-- LEGS -->
+  <path d="M 159,227 L 144,298 L 138,368" class="b" stroke-width="3.5"/>
+  <line x1="138" y1="368" x2="158" y2="377" class="b" stroke-width="3"/>
+  <circle cx="144" cy="298" r="3.5" class="jt"/>
+  <path d="M 217,224 L 231,295 L 237,368" class="b" stroke-width="3.5"/>
+  <line x1="237" y1="368" x2="281" y2="377" class="b" stroke-width="3"/>
+  <circle cx="231" cy="295" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">HOOK</text>
+  <text x="192" y="458" class="ls">LEAD HORIZONTAL ARC</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 04 ── REAR HOOK  (col 3, row 0)                                -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(1152,57)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">04</text>
+
+  <circle cx="192" cy="88" r="26" class="bf"/>
+  <path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+  <line x1="192" y1="114" x2="184" y2="123" class="b"/>
+  <!-- TORSO — strongly rotated, rear shoulder comes forward -->
+  <path d="M 162,116 L 228,112 L 225,220 L 162,225 Z" class="bf"/>
+  <line x1="164" y1="196" x2="226" y2="192" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- LEAD ARM — guard, pulled back -->
+  <path d="M 228,118 L 234,169 L 212,125" class="b"/>
+  <ellipse cx="209" cy="117" rx="11" ry="9" class="gv"/>
+  <circle cx="234" cy="169" r="3.5" class="jt"/>
+
+  <!-- REAR ARM — REAR HOOK: extends LEFT, forearm drops at 90° -->
+  <path d="M 162,120 L 118,127" class="b" stroke-width="3.5"/>
+  <path d="M 118,127 L 122,168" class="b" stroke-width="3.5"/>
+  <ellipse cx="121" cy="176" rx="13" ry="10" class="gv"/>
+  <circle cx="118" cy="127" r="4" class="jt"/>
+  <circle cx="162" cy="120" r="4" class="jt"/>
+  <!-- arc motion indicator (from left) -->
+  <path d="M 148,96 Q 106,114 112,164" class="ac"/>
+
+  <!-- LEGS -->
+  <path d="M 164,225 L 149,297 L 143,368" class="b" stroke-width="3.5"/>
+  <line x1="143" y1="368" x2="163" y2="377" class="b" stroke-width="3"/>
+  <circle cx="149" cy="297" r="3.5" class="jt"/>
+  <path d="M 222,220 L 236,293 L 242,368" class="b" stroke-width="3.5"/>
+  <line x1="242" y1="368" x2="286" y2="377" class="b" stroke-width="3"/>
+  <circle cx="236" cy="293" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">REAR HOOK</text>
+  <text x="192" y="458" class="ls">REAR HORIZONTAL ARC</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 05 ── LEAD UPPERCUT  (col 4, row 0)                           -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(1536,57)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">05</text>
+
+  <circle cx="193" cy="88" r="26" class="bf"/>
+  <path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+  <line x1="193" y1="114" x2="188" y2="123" class="b"/>
+  <path d="M 158,123 L 222,120 L 219,222 L 156,225 Z" class="bf"/>
+  <line x1="158" y1="197" x2="220" y2="195" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — guard -->
+  <path d="M 158,129 L 162,174 L 183,129" class="b"/>
+  <ellipse cx="184" cy="121" rx="11" ry="9" class="gv"/>
+  <circle cx="162" cy="174" r="3.5" class="jt"/>
+
+  <!-- LEAD ARM — UPPERCUT: elbow drops down-forward, fist rises from below -->
+  <path d="M 222,120 L 256,165" class="b" stroke-width="3.5"/>
+  <path d="M 256,165 L 220,122" class="b" stroke-width="3.5"/>
+  <ellipse cx="217" cy="115" rx="12" ry="10" class="gv"/>
+  <circle cx="256" cy="165" r="4" class="jt"/>
+  <!-- upward motion streaks (with arrow) -->
+  <line x1="248" y1="168" x2="248" y2="132" class="sk" marker-end="url(#arrU)"/>
+  <line x1="242" y1="166" x2="242" y2="138" class="sk" marker-end="url(#arrU)"/>
+  <line x1="254" y1="167" x2="254" y2="136" class="sk" marker-end="url(#arrU)"/>
+
+  <!-- LEGS -->
+  <path d="M 160,225 L 145,297 L 139,368" class="b" stroke-width="3.5"/>
+  <line x1="139" y1="368" x2="159" y2="377" class="b" stroke-width="3"/>
+  <circle cx="145" cy="297" r="3.5" class="jt"/>
+  <path d="M 218,222 L 232,294 L 238,368" class="b" stroke-width="3.5"/>
+  <line x1="238" y1="368" x2="282" y2="377" class="b" stroke-width="3"/>
+  <circle cx="232" cy="294" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">LEAD UPPERCUT</text>
+  <text x="192" y="458" class="ls">RISING LEAD PUNCH</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 06 ── REAR UPPERCUT  (col 0, row 1)                           -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(0,559)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">06</text>
+
+  <circle cx="192" cy="88" r="26" class="bf"/>
+  <path d="M 170,82 Q 165,88 170,95" class="b" stroke-width="2.5"/>
+  <line x1="192" y1="114" x2="186" y2="123" class="b"/>
+  <!-- TORSO — rotated for rear power -->
+  <path d="M 162,119 L 228,115 L 225,221 L 162,225 Z" class="bf"/>
+  <line x1="163" y1="197" x2="226" y2="193" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- LEAD ARM — guard, pulled back -->
+  <path d="M 228,121 L 234,169 L 213,127" class="b"/>
+  <ellipse cx="210" cy="119" rx="11" ry="9" class="gv"/>
+  <circle cx="234" cy="169" r="3.5" class="jt"/>
+
+  <!-- REAR ARM — REAR UPPERCUT: drops down-left, swings up -->
+  <path d="M 162,121 L 137,164" class="b" stroke-width="3.5"/>
+  <path d="M 137,164 L 170,125" class="b" stroke-width="3.5"/>
+  <ellipse cx="172" cy="117" rx="12" ry="10" class="gv"/>
+  <circle cx="137" cy="164" r="4" class="jt"/>
+  <!-- upward motion arrows -->
+  <line x1="148" y1="167" x2="148" y2="133" class="sk" marker-end="url(#arrU)"/>
+  <line x1="143" y1="165" x2="143" y2="138" class="sk" marker-end="url(#arrU)"/>
+  <line x1="153" y1="166" x2="153" y2="135" class="sk" marker-end="url(#arrU)"/>
+
+  <!-- LEGS -->
+  <path d="M 164,225 L 149,297 L 143,368" class="b" stroke-width="3.5"/>
+  <line x1="143" y1="368" x2="163" y2="377" class="b" stroke-width="3"/>
+  <circle cx="149" cy="297" r="3.5" class="jt"/>
+  <path d="M 222,221 L 236,293 L 242,368" class="b" stroke-width="3.5"/>
+  <line x1="242" y1="368" x2="286" y2="377" class="b" stroke-width="3"/>
+  <circle cx="236" cy="293" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">REAR UPPERCUT</text>
+  <text x="192" y="458" class="ls">RISING REAR PUNCH</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 07 ── SLIP LEFT  (col 1, row 1)                               -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(384,559)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">07</text>
+
+  <!-- HEAD — moved LEFT, slightly lower -->
+  <circle cx="163" cy="96" r="26" class="bf"/>
+  <path d="M 140,90 Q 135,96 140,103" class="b" stroke-width="2.5"/>
+  <!-- NECK — angled left -->
+  <line x1="163" y1="122" x2="167" y2="127" class="b"/>
+  <!-- TORSO — tilted left -->
+  <path d="M 148,127 L 216,123 L 215,226 L 150,229 Z" class="bf"/>
+  <line x1="150" y1="202" x2="215" y2="199" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — guard (shifted with body) -->
+  <path d="M 148,133 L 152,177 L 175,133" class="b"/>
+  <ellipse cx="176" cy="125" rx="11" ry="9" class="gv"/>
+  <circle cx="152" cy="177" r="3.5" class="jt"/>
+
+  <!-- LEAD ARM — guard (shifted with body) -->
+  <path d="M 216,127 L 228,170 L 221,131" class="b"/>
+  <ellipse cx="223" cy="123" rx="11" ry="9" class="gv"/>
+  <circle cx="228" cy="170" r="3.5" class="jt"/>
+
+  <!-- Imaginary punch line (from right, aimed at normal head position x~195) -->
+  <line x1="360" y1="97" x2="198" y2="97" class="pl" marker-end="url(#arrL)"/>
+  <!-- Small ghost circle showing where head was -->
+  <circle cx="195" cy="96" r="22" stroke="#E11D48" stroke-width="1.2" fill="none" stroke-dasharray="5 4" opacity="0.2"/>
+
+  <!-- LEGS — weight slightly shifted left -->
+  <path d="M 152,229 L 137,300 L 131,368" class="b" stroke-width="3.5"/>
+  <line x1="131" y1="368" x2="153" y2="377" class="b" stroke-width="3"/>
+  <circle cx="137" cy="300" r="3.5" class="jt"/>
+  <path d="M 213,226 L 227,298 L 233,368" class="b" stroke-width="3.5"/>
+  <line x1="233" y1="368" x2="277" y2="377" class="b" stroke-width="3"/>
+  <circle cx="227" cy="298" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">SLIP LEFT</text>
+  <text x="192" y="458" class="ls">HEAD OUTSIDE LEFT</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 08 ── SLIP RIGHT  (col 2, row 1)                              -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(768,559)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">08</text>
+
+  <!-- HEAD — moved RIGHT, slightly lower -->
+  <circle cx="218" cy="96" r="26" class="bf"/>
+  <path d="M 195,90 Q 190,96 195,103" class="b" stroke-width="2.5"/>
+  <!-- NECK — angled right -->
+  <line x1="218" y1="122" x2="212" y2="127" class="b"/>
+  <!-- TORSO — tilted right -->
+  <path d="M 163,127 L 230,123 L 228,228 L 165,230 Z" class="bf"/>
+  <line x1="165" y1="203" x2="228" y2="200" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — guard -->
+  <path d="M 163,133 L 167,178 L 190,133" class="b"/>
+  <ellipse cx="191" cy="125" rx="11" ry="9" class="gv"/>
+  <circle cx="167" cy="178" r="3.5" class="jt"/>
+
+  <!-- LEAD ARM — guard, adjusted -->
+  <path d="M 230,127 L 242,170 L 237,131" class="b"/>
+  <ellipse cx="239" cy="123" rx="11" ry="9" class="gv"/>
+  <circle cx="242" cy="170" r="3.5" class="jt"/>
+
+  <!-- Imaginary punch line (from right, aimed at normal head x~192) -->
+  <line x1="360" y1="97" x2="194" y2="97" class="pl" marker-end="url(#arrL)"/>
+  <!-- Ghost circle at original head position -->
+  <circle cx="192" cy="96" r="22" stroke="#E11D48" stroke-width="1.2" fill="none" stroke-dasharray="5 4" opacity="0.2"/>
+
+  <!-- LEGS -->
+  <path d="M 167,230 L 152,302 L 146,368" class="b" stroke-width="3.5"/>
+  <line x1="146" y1="368" x2="168" y2="377" class="b" stroke-width="3"/>
+  <circle cx="152" cy="302" r="3.5" class="jt"/>
+  <path d="M 226,228 L 240,300 L 246,368" class="b" stroke-width="3.5"/>
+  <line x1="246" y1="368" x2="290" y2="377" class="b" stroke-width="3"/>
+  <circle cx="240" cy="300" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">SLIP RIGHT</text>
+  <text x="192" y="458" class="ls">HEAD OUTSIDE RIGHT</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 09 ── ROLL / BOB &amp; WEAVE  (col 3, row 1)                       -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(1152,559)">
+  <ellipse cx="192" cy="260" rx="135" ry="160" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">09</text>
+
+  <!-- HEAD — much lower and forward (dipping) -->
+  <circle cx="208" cy="148" r="26" class="bf"/>
+  <path d="M 185,142 Q 180,148 185,155" class="b" stroke-width="2.5"/>
+  <!-- NECK — angled forward -->
+  <line x1="208" y1="174" x2="202" y2="180" class="b"/>
+  <!-- TORSO — strong forward lean, lower body squat -->
+  <path d="M 158,182 L 232,168 L 238,256 L 164,262 Z" class="bf"/>
+  <line x1="160" y1="238" x2="236" y2="232" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — protecting head, forearm raised -->
+  <path d="M 158,184 L 157,220 L 183,174" class="b"/>
+  <ellipse cx="186" cy="166" rx="11" ry="9" class="gv"/>
+  <circle cx="157" cy="220" r="3.5" class="jt"/>
+
+  <!-- LEAD ARM — protecting head -->
+  <path d="M 232,170 L 244,206 L 226,166" class="b"/>
+  <ellipse cx="230" cy="158" rx="11" ry="9" class="gv"/>
+  <circle cx="244" cy="206" r="3.5" class="jt"/>
+
+  <!-- U-SHAPE motion arc above head (punch path boxer ducks under) -->
+  <path d="M 138,118 Q 205,155 273,118" class="ac"/>
+  <!-- Arrow tips on the arc ends -->
+  <path d="M 138,118 L 130,108 L 144,112 Z" fill="#E11D48" opacity="0.4"/>
+  <path d="M 273,118 L 281,108 L 267,112 Z" fill="#E11D48" opacity="0.4"/>
+
+  <!-- LEGS — deep squat, more bent -->
+  <path d="M 165,262 L 148,318 L 140,370" class="b" stroke-width="3.5"/>
+  <line x1="140" y1="370" x2="162" y2="378" class="b" stroke-width="3"/>
+  <circle cx="148" cy="318" r="3.5" class="jt"/>
+  <path d="M 236,256 L 255,310 L 260,368" class="b" stroke-width="3.5"/>
+  <line x1="260" y1="368" x2="304" y2="376" class="b" stroke-width="3"/>
+  <circle cx="255" cy="310" r="3.5" class="jt"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">ROLL</text>
+  <text x="192" y="458" class="ls">BOB AND WEAVE</text>
+</g>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MOVE 10 ── RESET / GUARD STANCE  (col 4, row 1)                    -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<g transform="translate(1536,559)">
+  <ellipse cx="192" cy="230" rx="130" ry="175" fill="url(#fglow)"/>
+  <path d="M 14,16 L 14,8 L 22,8"  class="br"/><path d="M 362,8  L 370,8  L 370,16" class="br"/>
+  <path d="M 14,484 L 14,492 L 22,492" class="br"/><path d="M 362,492 L 370,492 L 370,484" class="br"/>
+  <text x="192" y="44" class="ln">10</text>
+
+  <!-- Perfect guard stance — clean and upright -->
+  <circle cx="194" cy="86" r="27" class="bf"/>
+  <path d="M 171,80 Q 166,86 171,93" class="b" stroke-width="2.5"/>
+  <line x1="194" y1="113" x2="189" y2="122" class="b"/>
+
+  <!-- TORSO — balanced, upright -->
+  <path d="M 157,122 L 224,122 L 221,222 L 155,222 Z" class="bf"/>
+  <line x1="157" y1="197" x2="222" y2="197" class="b" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- REAR ARM — textbook guard at cheek -->
+  <path d="M 157,128 L 161,176 L 184,128" class="b" stroke-width="3.5"/>
+  <ellipse cx="185" cy="119" rx="13" ry="11" class="gv"/>
+  <circle cx="161" cy="176" r="4" class="jt"/>
+  <circle cx="157" cy="128" r="4" class="jt"/>
+
+  <!-- LEAD ARM — textbook guard slightly extended -->
+  <path d="M 224,124 L 243,173 L 244,127" class="b" stroke-width="3.5"/>
+  <ellipse cx="249" cy="118" rx="13" ry="11" class="gv"/>
+  <circle cx="243" cy="173" r="4" class="jt"/>
+  <circle cx="224" cy="124" r="4" class="jt"/>
+
+  <!-- Subtle "ready" indicator marks on each side -->
+  <line x1="102" y1="155" x2="112" y2="155" class="dv" opacity="0.4"/>
+  <line x1="272" y1="155" x2="282" y2="155" class="dv" opacity="0.4"/>
+  <line x1="102" y1="162" x2="108" y2="162" class="dv" opacity="0.3"/>
+  <line x1="276" y1="162" x2="282" y2="162" class="dv" opacity="0.3"/>
+
+  <!-- LEGS — clean fighting stance -->
+  <path d="M 159,222 L 144,295 L 138,368" class="b" stroke-width="3.5"/>
+  <line x1="138" y1="368" x2="158" y2="377" class="b" stroke-width="3"/>
+  <circle cx="144" cy="295" r="4" class="jt"/>
+  <path d="M 219,222 L 234,295 L 240,368" class="b" stroke-width="3.5"/>
+  <line x1="240" y1="368" x2="284" y2="377" class="b" stroke-width="3"/>
+  <circle cx="234" cy="295" r="4" class="jt"/>
+
+  <!-- Guard stance tick marks -->
+  <line x1="185" y1="112" x2="193" y2="104" class="sk" stroke-width="1.5" opacity="0.35"/>
+  <line x1="249" y1="110" x2="242" y2="102" class="sk" stroke-width="1.5" opacity="0.35"/>
+
+  <line x1="112" y1="422" x2="272" y2="422" class="dv"/>
+  <text x="192" y="440" class="lb">RESET</text>
+  <text x="192" y="458" class="ls">GUARD STANCE</text>
+</g>
+
+
+<!-- ===== BOTTOM ROW LABEL DECORATIONS ===== -->
+<!-- Subtle accent marks at bottom of sheet -->
+<line x1="48"   y1="1074" x2="336"  y2="1074" class="dv"/>
+<line x1="432"  y1="1074" x2="720"  y2="1074" class="dv"/>
+<line x1="816"  y1="1074" x2="1104" y2="1074" class="dv"/>
+<line x1="1200" y1="1074" x2="1488" y2="1074" class="dv"/>
+<line x1="1584" y1="1074" x2="1872" y2="1074" class="dv"/>
+
+</svg>
