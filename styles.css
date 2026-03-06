@@ -722,6 +722,47 @@ input[type="range"]::-moz-range-thumb {
   display: block;
 }
 
+.ref-move-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 384 / 502;
+  background-image: url('moves.svg');
+  background-size: 500% 215.139%; /* 1920/384 = 5, 1080/502 = 2.15139 */
+  background-repeat: no-repeat;
+  margin-top: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: #0C0C0E;
+}
+
+/* 
+ * SVGs layout in moves.svg:
+ * Row 1 (y=0):
+ * Col 1 (x=0s): 1 - Jab
+ * Col 2 (x=25%): 2 - Cross
+ * Col 3 (x=50%): 3 - Hook
+ * Col 4 (x=75%): 4 - Rear Hook
+ * Col 5 (x=100%): 5 - Lead Uppercut
+ * 
+ * Row 2 (y=100%):
+ * Col 1: 6 - Rear Uppercut
+ * Col 2: 7 - Slip Left
+ * Col 3: 8 - Slip Right
+ * Col 4: 9 - Roll
+ * Col 5: 0 - Reset
+ */
+.ref-item[data-ref="1"] .ref-move-img { background-position: 0% 0%; }
+.ref-item[data-ref="2"] .ref-move-img { background-position: 25% 0%; }
+.ref-item[data-ref="3"] .ref-move-img { background-position: 50% 0%; }
+.ref-item[data-ref="4"] .ref-move-img { background-position: 75% 0%; }
+.ref-item[data-ref="5"] .ref-move-img { background-position: 100% 0%; }
+
+.ref-item[data-ref="6"] .ref-move-img { background-position: 0% 100%; }
+.ref-item[data-ref="7"] .ref-move-img { background-position: 25% 100%; }
+.ref-item[data-ref="8"] .ref-move-img { background-position: 50% 100%; }
+.ref-item[data-ref="9"] .ref-move-img { background-position: 75% 100%; }
+.ref-item[data-ref="0"] .ref-move-img { background-position: 100% 100%; }
+
 .modal-content--ref .modal-close {
   margin-top: var(--space-3);
 }

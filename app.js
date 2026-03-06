@@ -15,9 +15,9 @@
     5: 'Upper', 6: 'Upper'
   };
   const MODES = {
-    easy:   { comboMin: 2, comboMax: 3, intraPause: 1000, resetPause: 4000, defenseChance: 0.10 },
-    medium: { comboMin: 3, comboMax: 5, intraPause: 1000,  resetPause: 2500, defenseChance: 0.30 },
-    hard:   { comboMin: 5, comboMax: 8, intraPause: 1000,  resetPause: 1500, defenseChance: 0.50 }
+    easy: { comboMin: 2, comboMax: 3, intraPause: 1000, resetPause: 4000, defenseChance: 0.10 },
+    medium: { comboMin: 3, comboMax: 5, intraPause: 1000, resetPause: 2500, defenseChance: 0.30 },
+    hard: { comboMin: 5, comboMax: 8, intraPause: 1000, resetPause: 1500, defenseChance: 0.50 }
   };
   const WARMUP_SEC = 10;
   const BURNOUT_SEC = 15;
@@ -90,7 +90,7 @@
         comboPaceSlider.value = s.comboPace;
         if (comboPaceLabel) comboPaceLabel.textContent = Number(s.comboPace).toFixed(1) + 'x';
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   function saveSettings() {
@@ -112,7 +112,7 @@
       if (raw !== null) {
         document.getElementById('custom-routine').value = raw;
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   function saveRoutines() {
@@ -221,7 +221,7 @@
     loadVoices();
   }
 
-  function formatComboForSpeech(combo, personality) {
+  function formatComboForSpeech(combo) {
     const mapping = {
       0: 'Reset',
       1: 'Jab',
@@ -234,11 +234,8 @@
       8: 'Slip Right',
       9: 'Roll'
     };
-    const parts = combo.split('-').map(function (n) { return mapping[n] || ''; }).filter(Boolean);
-    if (personality === 'aggressive') {
-      return parts.join('! ') + '!';
-    }
-    return parts.join(', ');
+    if (typeof combo !== 'string') return '';
+    return combo.split('-').map(function (n) { return mapping[n] || ''; }).filter(Boolean).join(', ');
   }
 
   function speakCombo(comboText, raw) {
@@ -246,8 +243,21 @@
     speechSynthesis.cancel();
 
     const personality = document.getElementById('coach-personality').value;
+
+    let textToSpeak = raw ? comboText : formatComboForSpeech(comboText);
+
+    // Apply personality tweaks after mapping
+    if (!raw) {
+      if (personality === 'aggressive') {
+        textToSpeak = textToSpeak.replace(/, /g, '! ') + '!';
+      } else if (personality === 'minimal') {
+        // Minimal leaves it mostly as is, maybe slightly shorter
+        textToSpeak = textToSpeak.replace(/Lead /g, '').replace(/Rear /g, '');
+      }
+    }
+
     const utterance = new SpeechSynthesisUtterance();
-    utterance.text = raw ? comboText : formatComboForSpeech(comboText, personality);
+    utterance.text = textToSpeak;
     utterance.voice = selectedVoice;
     utterance.lang = 'en-US';
     utterance.volume = 1;
@@ -281,14 +291,25 @@
   async function requestWakeLock() {
     try {
       if ('wakeLock' in navigator) {
+        if (wakeLock !== null) return;
         wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', function () {
+          wakeLock = null;
+        });
       }
-    } catch (_) {}
+    } catch (_) { }
   }
+
+  // Handle visibility changes to retain wake lock
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && state !== 'idle' && state !== 'finished') {
+      requestWakeLock();
+    }
+  });
 
   function releaseWakeLock() {
     if (wakeLock) {
-      try { wakeLock.release(); } catch (_) {}
+      try { wakeLock.release(); } catch (_) { }
       wakeLock = null;
     }
   }
@@ -668,6 +689,7 @@
 
   function togglePause() {
     if (state === 'paused') {
+      initializeSpeechEngine();
       resumeWorkout();
     } else {
       pauseWorkout();
@@ -691,7 +713,18 @@
   }
 
   // ——— Event bindings ———
+
+  function initializeSpeechEngine() {
+    // Silent warm-up utterance to unblock iOS Safari speech APIs
+    if (window.speechSynthesis) {
+      const g = new SpeechSynthesisUtterance('');
+      g.volume = 0;
+      speechSynthesis.speak(g);
+    }
+  }
+
   btnStart.addEventListener('click', function () {
+    initializeSpeechEngine();
     totalRounds = parseInt(document.getElementById('rounds').value, 10) || 3;
     roundDurationSec = parseInt(document.getElementById('round-duration').value, 10) || 180;
     currentRound = 1;
