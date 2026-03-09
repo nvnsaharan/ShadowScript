@@ -45,6 +45,29 @@
   let restTimeout = null;
   let restLeftSec = 0;
   let restTotalSec = 0;
+  let combosThisRound = 0;
+  let totalCombosThrown = 0;
+  let workoutStartDate = null;
+  const REST_TIPS = ["Keep your hands up between combos.", "Exhale on every punch.", "Stay on your toes.", "Breathe.", "Keep your chin down."];
+  const MOTIVATIONS = ["Good work, keep moving.", "Stay sharp.", "Push through.", "Keep it up."];
+
+  let audioCtx = null;
+  function playTone(freq, type, duration) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) { }
+  }
 
   // ——— DOM ———
   const progressBar = document.getElementById('progress-bar');
@@ -68,6 +91,14 @@
   const speechRateLabel = document.getElementById('speech-rate-label');
   const comboPaceSlider = document.getElementById('combo-pace');
   const comboPaceLabel = document.getElementById('combo-pace-label');
+  const coachVolumeSlider = document.getElementById('coach-volume');
+  const comboCounter = document.getElementById('combo-counter');
+  const presetRoutines = document.getElementById('preset-routines');
+  const liveMoveWrap = document.getElementById('live-move-wrap');
+  const liveMoveImg = document.getElementById('live-move-img');
+  const tutorialModal = document.getElementById('tutorial-modal');
+  const tutorialClose = document.getElementById('tutorial-close');
+  const btnShare = document.getElementById('btn-share');
 
   // ——— Persistence ———
   const STORAGE_KEYS = { routines: 'shadowscript_routines', settings: 'shadowscript_settings' };
@@ -90,6 +121,9 @@
         comboPaceSlider.value = s.comboPace;
         if (comboPaceLabel) comboPaceLabel.textContent = Number(s.comboPace).toFixed(1) + 'x';
       }
+      if (s.coachVolume != null && coachVolumeSlider) coachVolumeSlider.value = s.coachVolume;
+      const f = document.getElementById('focus-mode');
+      if (s.focusMode && f) f.value = s.focusMode;
     } catch (_) { }
   }
 
@@ -102,7 +136,9 @@
       southpaw: southpawEl && southpawEl.classList.contains('on'),
       coachPersonality: document.getElementById('coach-personality').value || 'standard',
       speechRate: parseFloat(speechRateSlider.value) || 1,
-      comboPace: parseFloat(comboPaceSlider?.value) || 1
+      comboPace: parseFloat(comboPaceSlider?.value) || 1,
+      coachVolume: parseFloat(coachVolumeSlider?.value) || 1,
+      focusMode: document.getElementById('focus-mode')?.value || 'none'
     }));
   }
 
@@ -162,16 +198,38 @@
     return d;
   }
 
+  function pickNextMove(arr, lastMove) {
+    let m = arr[randomInt(0, arr.length - 1)];
+    let retries = 5;
+    while (m === lastMove && retries > 0) {
+      m = arr[randomInt(0, arr.length - 1)];
+      retries--;
+    }
+    return m;
+  }
+
   function generateCombo(modeKey, southpaw) {
     const m = MODES[modeKey] || MODES.medium;
     const len = randomInt(m.comboMin, m.comboMax);
     const useDefense = Math.random() < m.defenseChance;
+    const focus = document.getElementById('focus-mode')?.value || 'none';
     const out = [];
+
+    let offPool = OFFENSE;
+    if (focus === 'jab') offPool = [1];
+    else if (focus === 'power') offPool = [3, 4, 5, 6];
+
     for (let i = 0; i < len; i++) {
-      if (useDefense && i > 0 && Math.random() < 0.4) {
-        out.push(pickDefense(southpaw));
+      const lastMove = out.length ? out[out.length - 1] : -1;
+      if (focus === 'defense') {
+        if (Math.random() < 0.6 && i > 0) out.push(pickDefense(southpaw));
+        else out.push(pickNextMove(OFFENSE, lastMove));
       } else {
-        out.push(OFFENSE[randomInt(0, OFFENSE.length - 1)]);
+        if (useDefense && focus !== 'jab' && i > 0 && Math.random() < 0.4) {
+          out.push(pickDefense(southpaw));
+        } else {
+          out.push(pickNextMove(offPool, lastMove));
+        }
       }
     }
     return out;
@@ -260,7 +318,7 @@
     utterance.text = textToSpeak;
     utterance.voice = selectedVoice;
     utterance.lang = 'en-US';
-    utterance.volume = 1;
+    utterance.volume = parseFloat(coachVolumeSlider?.value) ?? 1;
     utterance.pitch = 1;
 
     const baseRate = personality === 'minimal' ? 0.85 : personality === 'aggressive' ? 1.0 : 0.9;
@@ -366,9 +424,27 @@
     progressFill.style.width = p + '%';
   }
 
+  function updateLiveMove(moveObj) {
+    if (!liveMoveWrap || !liveMoveImg) return;
+    if (moveObj == null || moveObj === -1) {
+      liveMoveWrap.style.opacity = '0';
+      return;
+    }
+    liveMoveWrap.style.opacity = '1';
+    const map = { 1: '0% 0%', 2: '25% 0%', 3: '50% 0%', 4: '75% 0%', 5: '100% 0%', 6: '0% 100%', 7: '25% 100%', 8: '50% 100%', 9: '75% 100%', 0: '100% 100%' };
+    liveMoveImg.style.backgroundPosition = map[moveObj] || '100% 100%';
+  }
+
   function renderComboTrack(highlightIndex) {
     const southpaw = document.getElementById('toggle-southpaw').classList.contains('on');
     comboTrack.innerHTML = '';
+
+    if (highlightIndex === -1 || highlightIndex >= comboQueue.length) {
+      updateLiveMove(-1);
+    } else {
+      updateLiveMove(comboQueue[highlightIndex]);
+    }
+
     comboQueue.forEach((move, i) => {
       let label = PUNCH_NAMES[move];
       if (southpaw && (move === 7 || move === 8)) label = move === 7 ? 'Slip R' : 'Slip L';
@@ -392,6 +468,38 @@
     return currentRound === totalRounds && roundElapsedSec >= roundDurationSec - BURNOUT_SEC && state === 'running';
   }
 
+  function saveHistoryData() {
+    const modeKey = document.getElementById('difficulty').value || 'medium';
+    const dateStr = new Date().toLocaleDateString();
+    const summaryText = `ShadowScript Session\nDate: ${dateStr}\nRounds: ${totalRounds}\nDuration: ${totalRounds * roundDurationSec / 60} min\nDifficulty: ${modeKey}\nCombos: ${totalCombosThrown}`;
+
+    const summaryEl = document.getElementById('workout-summary');
+    if (summaryEl) {
+      summaryEl.innerHTML = `<strong>Date:</strong> ${dateStr}<br>
+          <strong>Rounds:</strong> ${totalRounds}<br>
+          <strong>Duration:</strong> ${Math.floor((totalRounds * roundDurationSec) / 60)} min<br>
+          <strong>Difficulty:</strong> ${modeKey.charAt(0).toUpperCase() + modeKey.slice(1)}<br>
+          <strong>Total Combos:</strong> ${totalCombosThrown}`;
+    }
+
+    try {
+      let hist = JSON.parse(localStorage.getItem('shadowscript_history') || '[]');
+      hist.push({ date: dateStr, rounds: totalRounds, duration: totalRounds * roundDurationSec, difficulty: modeKey, combos: totalCombosThrown });
+      if (hist.length > 30) hist.shift();
+      localStorage.setItem('shadowscript_history', JSON.stringify(hist));
+    } catch (e) { }
+
+    if (btnShare) {
+      btnShare.onclick = function () {
+        navigator.clipboard.writeText(summaryText);
+        const orig = btnShare.textContent;
+        btnShare.textContent = 'Copied!';
+        setTimeout(() => { btnShare.textContent = orig; }, 2000);
+      };
+    }
+  }
+
+  // --- Timer flow beep inject ---
   // ——— Timer & round flow ———
   function startRound() {
     if (timerInterval) {
@@ -408,6 +516,8 @@
     }
     roundStartTime = Date.now();
     roundElapsedSec = 0;
+    combosThisRound = 0;
+    if (comboCounter) comboCounter.textContent = 'Combos: 0';
     const modeKey = document.getElementById('difficulty').value || 'medium';
     const m = getMode();
     const customText = document.getElementById('custom-routine').value.trim();
@@ -420,6 +530,8 @@
     comboIndex = 0;
     renderComboTrack(-1);
 
+    speakCombo('Get into your stance. Hands up. Stay light on your feet.', true);
+
     timerInterval = setInterval(function () {
       if (state === 'paused') return;
       const elapsed = (Date.now() - roundStartTime) / 1000;
@@ -429,7 +541,34 @@
         const left = WARMUP_SEC - roundElapsedSec;
         bigTimer.textContent = formatTime(Math.max(0, left));
         updateProgress();
+        if (left > 0 && left <= 3 && Math.abs((Date.now() - roundStartTime) / 1000 - (WARMUP_SEC - left)) < 0.25) {
+          playTone(600, 'sine', 0.1);
+        }
         if (left <= 0) {
+          setState('running');
+          vibrate([100, 50, 100]);
+          playTone(800, 'sine', 0.5);
+          startRunningPhase(modeKey, m, customCombos, southpaw);
+        }
+        return;
+      }
+
+      if (state === 'running') {
+        const roundSec = roundDurationSec;
+        const left = roundSec - roundElapsedSec;
+        bigTimer.textContent = formatTime(Math.max(0, left));
+        updateProgress();
+
+        if (left > 0 && left <= 3 && Math.abs((Date.now() - roundStartTime) / 1000 - (roundSec - left)) < 0.25) {
+          playTone(600, 'sine', 0.1);
+        }
+
+        if (isBurnoutPhase()) {
+          if (!trainingView.classList.contains('burnout')) trainingView.classList.add('burnout');
+        }
+
+        if (left <= 0) {
+
           setState('running');
           vibrate([100, 50, 100]);
           startRunningPhase(modeKey, m, customCombos, southpaw);
@@ -451,14 +590,17 @@
           clearComboTimers();
           setState('rest');
           vibrate([200, 100, 200]);
+          playTone(400, 'triangle', 0.4);
           if (currentRound >= totalRounds) {
             setState('finished');
             showView('finished');
-            document.getElementById('finished-message').textContent = 'All rounds done. Great work.';
+            saveHistoryData();
             releaseWakeLock();
             progressFill.style.width = '100%';
             return;
           }
+          speakCombo(REST_TIPS[randomInt(0, REST_TIPS.length - 1)], true);
+
           const restMs = m.resetPause;
           if (restTimeout) clearTimeout(restTimeout);
           restTimeout = setTimeout(function () {
@@ -519,7 +661,12 @@
       comboIndex = 0;
       renderComboTrack(0);
 
+      combosThisRound++;
+      totalCombosThrown++;
+      if (comboCounter) comboCounter.textContent = 'Combos: ' + combosThisRound;
+
       const comboForSpeech = comboQueue.map(function (n) {
+
         if (southpaw && n === 7) return 8;
         if (southpaw && n === 8) return 7;
         return n;
@@ -542,6 +689,9 @@
       const resetPause = Math.round(baseResetPause * paceMultiplier);
       const t = setTimeout(function () {
         if (state !== 'running') return;
+        if (!isBurnout && combosThisRound % 5 === 0 && Math.random() < 0.6) {
+          speakCombo(MOTIVATIONS[randomInt(0, MOTIVATIONS.length - 1)], true);
+        }
         scheduleNext();
       }, totalComboTime + resetPause);
       comboTimeouts.push(t);
@@ -630,7 +780,34 @@
         const left = WARMUP_SEC - roundElapsedSec;
         bigTimer.textContent = formatTime(Math.max(0, left));
         updateProgress();
+        if (left > 0 && left <= 3 && Math.abs((Date.now() - roundStartTime) / 1000 - (WARMUP_SEC - left)) < 0.25) {
+          playTone(600, 'sine', 0.1);
+        }
         if (left <= 0) {
+          setState('running');
+          vibrate([100, 50, 100]);
+          playTone(800, 'sine', 0.5);
+          startRunningPhase(modeKey, m, customCombos, southpaw);
+        }
+        return;
+      }
+
+      if (state === 'running') {
+        const roundSec = roundDurationSec;
+        const left = roundSec - roundElapsedSec;
+        bigTimer.textContent = formatTime(Math.max(0, left));
+        updateProgress();
+
+        if (left > 0 && left <= 3 && Math.abs((Date.now() - roundStartTime) / 1000 - (roundSec - left)) < 0.25) {
+          playTone(600, 'sine', 0.1);
+        }
+
+        if (isBurnoutPhase()) {
+          if (!trainingView.classList.contains('burnout')) trainingView.classList.add('burnout');
+        }
+
+        if (left <= 0) {
+
           setState('running');
           vibrate([100, 50, 100]);
           startRunningPhase(modeKey, m, customCombos, southpaw);
@@ -650,14 +827,17 @@
           clearComboTimers();
           setState('rest');
           vibrate([200, 100, 200]);
+          playTone(400, 'triangle', 0.4);
           if (currentRound >= totalRounds) {
             setState('finished');
             showView('finished');
-            document.getElementById('finished-message').textContent = 'All rounds done. Great work.';
+            saveHistoryData();
             releaseWakeLock();
             progressFill.style.width = '100%';
             return;
           }
+          speakCombo(REST_TIPS[randomInt(0, REST_TIPS.length - 1)], true);
+
           const restMs = m.resetPause;
           if (restTimeout) clearTimeout(restTimeout);
           restTimeout = setTimeout(function () {
@@ -728,9 +908,12 @@
     totalRounds = parseInt(document.getElementById('rounds').value, 10) || 3;
     roundDurationSec = parseInt(document.getElementById('round-duration').value, 10) || 180;
     currentRound = 1;
+    totalCombosThrown = 0;
+    workoutStartDate = new Date();
     lastCombo = null;
     pivotRepeatCount = 0;
     roundLabel.textContent = 'Round 1 of ' + totalRounds;
+
     saveSettings();
     saveRoutines();
     requestWakeLock();
@@ -786,10 +969,48 @@
     if (e.target === refModal) closeRefModal();
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && refModal.classList.contains('active')) {
-      closeRefModal();
+    if (e.key === 'Escape') {
+      if (refModal.classList.contains('active')) {
+        closeRefModal();
+      } else if (state !== 'idle' && state !== 'finished') {
+        if (confirm('End workout early?')) stopWorkout();
+      }
+    }
+    if (e.key === ' ' && state !== 'idle' && state !== 'finished' && !refModal.classList.contains('active')) {
+      e.preventDefault();
+      togglePause();
     }
   });
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('round-duration').value = btn.dataset.sec;
+    });
+  });
+
+  if (presetRoutines) {
+    presetRoutines.addEventListener('change', function () {
+      if (this.value) document.getElementById('custom-routine').value = this.value;
+    });
+  }
+  document.getElementById('custom-routine').addEventListener('input', function () {
+    if (presetRoutines) presetRoutines.value = '';
+  });
+
+  if (!localStorage.getItem('shadowscript_seen_tutorial')) {
+    if (tutorialModal) {
+      tutorialModal.classList.add('active');
+      tutorialModal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  if (tutorialClose) {
+    tutorialClose.addEventListener('click', () => {
+      tutorialModal.classList.remove('active');
+      tutorialModal.setAttribute('aria-hidden', 'true');
+      localStorage.setItem('shadowscript_seen_tutorial', '1');
+    });
+  }
 
   // Collapsible punch reference items
   refModal.querySelectorAll('.ref-item').forEach(function (item) {
