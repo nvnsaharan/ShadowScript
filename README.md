@@ -11,7 +11,8 @@ Professional, distraction-free shadow boxing trainer (vanilla HTML/CSS/JS).
 
 - **Coach engine**: numeric DSL (0–9), difficulty modes, pivot/variation logic
 - **States**: Idle → Warmup → Running → Rest → Finished
-- **Speech coaching**: natural combo phrasing + voice selection (prefers high-quality en-US voices)
+- **Speech coaching**: natural combo phrasing + intelligent prioritization of clear, non-nasal OS voices (e.g. Daniel, Oliver) over lower-quality defaults
+- **Visual Stance Gap**: explicitly displays a stylized "Guard" chip at the end of each combo during the defensive pause
 - **Burnout finisher**: final 15s of the last round
 - **Custom routines**: one combo per line, persisted in `localStorage`
 - **Wake Lock + haptics** (when supported)

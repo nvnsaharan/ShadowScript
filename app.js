@@ -9,7 +9,7 @@
   const PUNCH_NAMES = {
     1: 'Jab', 2: 'Cross', 3: 'Hook', 4: 'Rear Hook',
     5: 'Lead Uppercut', 6: 'Rear Uppercut',
-    7: 'Slip Left', 8: 'Slip Right', 9: 'Roll', 0: 'Reset'
+    7: 'Slip Left', 8: 'Slip Right', 9: 'Roll', 0: 'Guard'
   };
   const PUNCH_SHORT = {
     5: 'Upper', 6: 'Upper'
@@ -48,8 +48,20 @@
   let combosThisRound = 0;
   let totalCombosThrown = 0;
   let workoutStartDate = null;
-  const REST_TIPS = ["Keep your hands up between combos.", "Exhale on every punch.", "Stay on your toes.", "Breathe.", "Keep your chin down."];
-  const MOTIVATIONS = ["Good work, keep moving.", "Stay sharp.", "Push through.", "Keep it up."];
+  const REST_TIPS = [
+    "Focus now.... Keep your stance and breathe.",
+    "Exhale on every punch.... Recover your breath.",
+    "Stay on your toes.... Stay light.",
+    "Breathe deep.... Keep your hands up.",
+    "Keep your chin down.... Reset your guard."
+  ];
+  const MOTIVATIONS = [
+    "Let’s go!... Get into your guard and hit those combos hard!",
+    "Good work... but keep moving!",
+    "Stay sharp.... Push through!",
+    "Big combo coming up... get ready... go!",
+    "Keep it up.... You’ve got this."
+  ];
 
   let audioCtx = null;
   function playTone(freq, type, duration) {
@@ -266,13 +278,25 @@
   let selectedVoice = null;
   let speaking = false;
 
+  function getPreferredVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    const preferredNames = [
+      "Google UK English Male",
+      "Google UK English Female",
+      "Google US English",
+      "Microsoft Hazel Mobile",
+      "Alex"
+    ];
+    for (const name of preferredNames) {
+      const v = voices.find(voice => voice.name === name);
+      if (v) return v;
+    }
+    return voices[0] || null;
+  }
+
   function loadVoices() {
     if (!window.speechSynthesis) return;
-    const voices = speechSynthesis.getVoices();
-    selectedVoice =
-      voices.find(function (v) { return v.name.indexOf('Google') !== -1 && v.lang === 'en-US'; }) ||
-      voices.find(function (v) { return v.lang === 'en-US'; }) ||
-      voices[0];
+    selectedVoice = getPreferredVoice();
   }
   if (window.speechSynthesis) {
     speechSynthesis.onvoiceschanged = loadVoices;
@@ -293,37 +317,53 @@
       9: 'Roll'
     };
     if (typeof combo !== 'string') return '';
-    return combo.split('-').map(function (n) { return mapping[n] || ''; }).filter(Boolean).join(', ');
+    return combo.split('-').map(function (n) { return mapping[n] || ''; }).filter(Boolean).join('.... ');
   }
 
-  function speakCombo(comboText, raw) {
+  function speakCombo(comboText, raw, customTone) {
     if (!window.speechSynthesis || !comboText) return;
     speechSynthesis.cancel();
+
+    const voice = getPreferredVoice();
+    if (!voice) return;
 
     const personality = document.getElementById('coach-personality').value;
 
     let textToSpeak = raw ? comboText : formatComboForSpeech(comboText);
 
-    // Apply personality tweaks after mapping
     if (!raw) {
       if (personality === 'aggressive') {
-        textToSpeak = textToSpeak.replace(/, /g, '! ') + '!';
+        textToSpeak = textToSpeak.replace(/\.\.\.\. /g, '!... ') + '!';
       } else if (personality === 'minimal') {
-        // Minimal leaves it mostly as is, maybe slightly shorter
         textToSpeak = textToSpeak.replace(/Lead /g, '').replace(/Rear /g, '');
       }
     }
 
-    const utterance = new SpeechSynthesisUtterance();
-    utterance.text = textToSpeak;
-    utterance.voice = selectedVoice;
-    utterance.lang = 'en-US';
-    utterance.volume = parseFloat(coachVolumeSlider?.value) ?? 1;
-    utterance.pitch = 1;
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.voice = voice;
+    if (voice.lang) utterance.lang = voice.lang;
+    utterance.volume = parseFloat(coachVolumeSlider?.value) ?? 1.0;
 
-    const baseRate = personality === 'minimal' ? 0.85 : personality === 'aggressive' ? 1.0 : 0.9;
+    let tone = customTone;
+    if (!tone) {
+      tone = personality === 'aggressive' ? 'excited' : (personality === 'minimal' ? 'serious' : 'neutral');
+    }
+
+    if (tone === "excited") {
+      utterance.rate = 1.25;
+      utterance.pitch = 1.4;
+    } else if (tone === "serious") {
+      utterance.rate = 0.9;
+      utterance.pitch = 0.9;
+    } else {
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+    }
+
     const userRate = parseFloat(speechRateSlider?.value, 10) || 1;
-    utterance.rate = baseRate * userRate;
+    utterance.rate *= userRate;
+
+    utterance.pitch += (Math.random() * 0.1 - 0.05);
 
     speaking = true;
     utterance.onend = function () { speaking = false; };
@@ -332,7 +372,7 @@
   }
 
   function speakRoundIntro(round, total) {
-    speakCombo('Round ' + round + ' of ' + total + '. Begin.', true);
+    speakCombo('Round ' + round + ' of ' + total + '.... Ready?.... Begin.', true, 'excited');
   }
 
   function comboToNames(combo, shortForm) {
@@ -439,20 +479,26 @@
     const southpaw = document.getElementById('toggle-southpaw').classList.contains('on');
     comboTrack.innerHTML = '';
 
-    if (highlightIndex === -1 || highlightIndex >= comboQueue.length) {
+    if (highlightIndex === -1 && comboQueue.length === 0) {
       updateLiveMove(-1);
-    } else {
+    } else if (highlightIndex >= comboQueue.length && comboQueue.length > 0) {
+      updateLiveMove(0); // 0 corresponds to the Guard Stance in moves.svg
+    } else if (highlightIndex >= 0 && highlightIndex < comboQueue.length) {
       updateLiveMove(comboQueue[highlightIndex]);
     }
 
-    comboQueue.forEach((move, i) => {
+    const trackMoves = comboQueue.length ? [...comboQueue, 0] : [];
+
+    trackMoves.forEach((move, i) => {
       let label = PUNCH_NAMES[move];
       if (southpaw && (move === 7 || move === 8)) label = move === 7 ? 'Slip R' : 'Slip L';
       const chip = document.createElement('span');
       let stateClass = 'next';
       if (i < highlightIndex) stateClass = 'prev';
       else if (i === highlightIndex) stateClass = 'current';
-      chip.className = 'combo-chip ' + stateClass;
+
+      let baseClass = move === 0 ? 'combo-chip reset' : 'combo-chip';
+      chip.className = baseClass + ' ' + stateClass;
       chip.textContent = label;
       comboTrack.appendChild(chip);
     });
@@ -530,7 +576,7 @@
     comboIndex = 0;
     renderComboTrack(-1);
 
-    speakCombo('Get into your stance. Hands up. Stay light on your feet.', true);
+    speakCombo('Get into your stance.... Hands up.... Stay light on your feet.', true, 'serious');
 
     timerInterval = setInterval(function () {
       if (state === 'paused') return;
@@ -599,7 +645,7 @@
             progressFill.style.width = '100%';
             return;
           }
-          speakCombo(REST_TIPS[randomInt(0, REST_TIPS.length - 1)], true);
+          speakCombo(REST_TIPS[randomInt(0, REST_TIPS.length - 1)], true, 'serious');
 
           const restMs = m.resetPause;
           if (restTimeout) clearTimeout(restTimeout);
@@ -690,7 +736,7 @@
       const t = setTimeout(function () {
         if (state !== 'running') return;
         if (!isBurnout && combosThisRound % 5 === 0 && Math.random() < 0.6) {
-          speakCombo(MOTIVATIONS[randomInt(0, MOTIVATIONS.length - 1)], true);
+          speakCombo(MOTIVATIONS[randomInt(0, MOTIVATIONS.length - 1)], true, 'excited');
         }
         scheduleNext();
       }, totalComboTime + resetPause);
@@ -836,7 +882,7 @@
             progressFill.style.width = '100%';
             return;
           }
-          speakCombo(REST_TIPS[randomInt(0, REST_TIPS.length - 1)], true);
+          speakCombo(REST_TIPS[randomInt(0, REST_TIPS.length - 1)], true, 'serious');
 
           const restMs = m.resetPause;
           if (restTimeout) clearTimeout(restTimeout);
