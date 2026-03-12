@@ -12,7 +12,7 @@
     7: 'Slip Left', 8: 'Slip Right', 9: 'Roll', 0: 'Guard'
   };
   const PUNCH_SHORT = {
-    5: 'Upper', 6: 'Upper'
+    5: 'Upper', 6: 'Rear Uppercut'
   };
   const MODES = {
     easy: { comboMin: 2, comboMax: 3, intraPause: 1000, resetPause: 4000, defenseChance: 0.10 },
